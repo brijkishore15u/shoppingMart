@@ -20,3 +20,6 @@ export const getProduct = (id) => API.get(`/products/${id}`);
 export const createProduct = (data) => API.post('/products', data);
 export const updateProduct = (id, data) => API.put(`/products/${id}`, data);
 export const deleteProduct = (id) => API.delete(`/products/${id}`);
+
+// Toggle publish
+export const togglePublish = (id) => API.patch(`/products/${id}/toggle-publish`);
