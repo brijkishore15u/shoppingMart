@@ -17,6 +17,7 @@ export default function ProductDetail() {
       .then(r => setProduct(r.data))
       .catch(() => { toast.error('Product not found'); navigate('/products'); })
       .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleDelete = async () => {
