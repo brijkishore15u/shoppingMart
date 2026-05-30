@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getProducts, deleteProduct, togglePublish } from '../services/api';
@@ -24,9 +24,9 @@ export default function Products() {
   useEffect(() => {
     const cat = searchParams.get('category');
     if (cat) setCategory(cat);
-  }, []);
+  }, [searchParams]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       const params = {};
@@ -40,10 +40,11 @@ export default function Products() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, category, statusFilter]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchProducts(); }, [search, category, statusFilter]);
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const handleTogglePublish = async (product) => {
     try {
@@ -83,7 +84,6 @@ export default function Products() {
           <Link to="/products/add" className="btn btn-primary" style={{width:'auto'}}>➕ Add Product</Link>
         </div>
 
-        {/* Filters */}
         <div className="search-bar">
           <div className="search-input-wrap" style={{flex:1}}>
             <span className="search-icon">🔍</span>
@@ -92,9 +92,12 @@ export default function Products() {
           <select className="filter-select" value={category} onChange={e => setCategory(e.target.value)}>
             {CATEGORIES.map(c => <option key={c}>{c}</option>)}
           </select>
-          {/* Status Filter */}
-          <select className="filter-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-            style={{background: statusFilter==='published'?'#f0fdf4': statusFilter==='unpublished'?'#fff5f5':'white'}}>
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            style={{background: statusFilter==='published'?'#f0fdf4': statusFilter==='unpublished'?'#fff5f5':'white'}}
+          >
             <option value="all">All Status</option>
             <option value="published">🟢 Published</option>
             <option value="unpublished">🔴 Unpublished</option>
@@ -110,7 +113,6 @@ export default function Products() {
           <div className="products-grid">
             {products.map(p => (
               <div className="product-card" key={p._id}>
-                {/* Published badge */}
                 <div style={{position:'relative'}}>
                   <div className="product-img" onClick={() => navigate(`/products/${p._id}`)} style={{cursor:'pointer'}}>
                     {p.image
@@ -118,7 +120,6 @@ export default function Products() {
                       : <span style={{fontSize:'3rem'}}>{EMOJI[p.category]||'📦'}</span>
                     }
                   </div>
-                  {/* Status badge on image */}
                   <span style={{
                     position:'absolute', top:8, right:8,
                     padding:'3px 10px', borderRadius:20, fontSize:'0.72rem', fontWeight:700,
@@ -141,13 +142,16 @@ export default function Products() {
                 </div>
 
                 <div className="product-actions" style={{flexWrap:'wrap', gap:6}}>
-                  {/* Publish Toggle Button */}
                   <button
                     onClick={() => handleTogglePublish(p)}
                     style={{
                       flex:'1 1 100%',
-                      padding:'7px', border:'none', borderRadius:6, cursor:'pointer',
-                      fontWeight:700, fontSize:'0.82rem', fontFamily:'inherit',
+                      padding:'7px',
+                      borderRadius:6,
+                      cursor:'pointer',
+                      fontWeight:700,
+                      fontSize:'0.82rem',
+                      fontFamily:'inherit',
                       background: p.isPublished ? '#fff5f5' : '#f0fdf4',
                       color: p.isPublished ? '#ef4444' : '#22c55e',
                       border: `1px solid ${p.isPublished ? '#fca5a5' : '#86efac'}`
