@@ -13,14 +13,14 @@ const app = express();
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
-// Middleware
+// CORS - Allow all origins
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    process.env.FRONTEND_URL
-  ].filter(Boolean),
-  credentials: true
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(uploadsDir));
@@ -34,23 +34,19 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'DMart API is running', time: new Date() });
 });
 
-// Root
 app.get('/', (req, res) => {
   res.json({ message: 'DMart API Server', version: '1.0.0' });
 });
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Internal server error' });
 });
 
-// MongoDB connection
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/dmart';
 
 mongoose.connect(MONGO_URI)
@@ -60,7 +56,6 @@ mongoose.connect(MONGO_URI)
   })
   .catch(err => {
     console.error('❌ MongoDB connection error:', err.message);
-    console.log('💡 Tip: Update MONGO_URI in backend/.env file');
   });
 
 async function seedData() {
@@ -87,12 +82,7 @@ async function seedData() {
     const userCount = await User.countDocuments();
     if (userCount === 0) {
       const hashed = await bcrypt.hash('admin123', 10);
-      await User.create({
-        name: 'Admin User',
-        email: 'admin@dmart.com',
-        password: hashed,
-        phone: '9999999999'
-      });
+      await User.create({ name: 'Admin User', email: 'admin@dmart.com', password: hashed, phone: '9999999999' });
       console.log('👤 Demo user: admin@dmart.com / admin123');
     }
   } catch (err) {
@@ -102,9 +92,7 @@ async function seedData() {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log('');
-  console.log('🚀 DMart Server Started!');
+  console.log(`\n🚀 DMart Server Started!`);
   console.log(`📦 API: http://localhost:${PORT}/api`);
-  console.log(`❤️  Health: http://localhost:${PORT}/api/health`);
-  console.log('');
+  console.log(`❤️  Health: http://localhost:${PORT}/api/health\n`);
 });
